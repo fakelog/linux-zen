@@ -1,0 +1,28 @@
+name: "release"
+
+on:
+    push:
+        branches:
+            - main
+
+jobs:
+    release:
+        name: Release
+        runs-on: ubuntu-latest
+        container:
+            image: archlinux:latest
+        steps:
+            - uses: actions/checkout@v3
+            - run: pacman -Syu --noconfirm --needed base-devel linux-headers libelf inetutils xmlto docbook-xsl llvm clang lld bc sudo
+            - run: useradd -m build
+            - run: passwd -d build
+            - run: cp -r * /home/build
+            - run: echo 'build ALL=(ALL) ALL' | tee -a /etc/sudoers
+            - run: su - build -c "makepkg -si --noconfirm --needed --skippgpcheck"
+            - uses: "marvinpinto/action-automatic-releases@latest"
+              with:
+                repo_token: "${{ secrets.GITHUB_TOKEN }}"
+                automatic_release_tag: "latest"
+                release: true
+                title: "Auto Build"
+                files: '/home/build/*.tar.zst'

@@ -38,15 +38,18 @@ validpgpkeys=(
   C5ADB4F3FEBBCE27A3E54D7D9AE4078033F8024D  # Steven Barrett <steven@liquorix.net>
 )
 b2sums=('SKIP'
-        'a9ab82c9afe517e6cd2e1cedbb03a5f404237bf95faeb23ae2d05f980b7ffd1b491423342c5ee2b3556d803eead6e08038077430d555b44391ab1a6a040ee945')
+        '9b44d348b5709b1cf8d3a3810f3444997d4d83239c05ec6ef9cfd0e30ec6401f4b39103af78c45df9f475f8a8ffc89ba9682b6c8fc849b111a3f4470bde9a699')
 
+export BUILD_FLAGS="LLVM=1 LLVM_IAS=1 CC=clang CXX=clang++ LD=ld.lld AR=llvm-ar NM=llvm-nm
+STRIP=llvm-strip READELF=llvm-readelf HOSTCC=clang HOSTCXX=clang++ HOSTAR=llvm-ar HOSTLD=ld.lld
+OBJCOPY=llvm-objcopy OBJDUMP=objdump"
 export KBUILD_BUILD_HOST=archlinux
 export KBUILD_BUILD_USER=$pkgbase
 export KBUILD_BUILD_TIMESTAMP="$(date -Ru${SOURCE_DATE_EPOCH:+d @$SOURCE_DATE_EPOCH})"
 
 _make() {
   test -s version
-  make KERNELRELEASE="$(<version)" "$@"
+  make ${BUILD_FLAGS} KRNELRELEASE="$(<version)" "$@" -j$(nproc -all)
 }
 
 prepare() {
@@ -55,7 +58,7 @@ prepare() {
   echo "Setting version..."
   echo "-$pkgrel" > localversion.10-pkgrel
   echo "${pkgbase#linux}" > localversion.20-pkgname
-  make defconfig
+  make ${BUILD_FLAGS} defconfig
   make -s kernelrelease > version
   make mrproper
 
